@@ -12,66 +12,73 @@ dtypes = {
     'y': 'float32'
 }
 # load dataset
-week1 = pd.read_csv('Data/tracking_week_1.csv', dtype=dtypes)
+week1 = pd.read_csv('Data/normalized_wk1.csv', dtype=dtypes)
 
-# dataset created from week 1 tracking values
-front7_data = pd.read_csv('Data/front7_data.csv')
+# Categorize player alignments
+def categorize_player_alignment(df):
 
-# dictionary of ball position by game and play
-def create_ball_position_dict(tracking_data):
-    ball_data = tracking_data[tracking_data['nflId'].isna()]
-    ball_at_snap = ball_data[ball_data['event'] == 'ball_snap']
-    return dict(zip(zip(ball_at_snap['gameId'], ball_at_snap['playId']), 
-                    zip(ball_at_snap['x'], ball_at_snap['y'])))
 
-ball_position_dict = create_ball_position_dict(week1)
-
-# function that subtracts the play's ball coordinates from the player
-def normalize_coordinates(df, ball_position_dict):
-    multi_index = list(zip(df['gameId'], df['playId']))
-    ball_positions = pd.DataFrame(
-    [ball_position_dict.get(key, (0, 0)) for key in multi_index],  # Ensures order matches
-    columns=['ball_x', 'ball_y'],
-    index=df.index  # Explicitly match index with df 
-    )
-
-    # Vectorized adjustment of x and y coordinates
-    df[['x', 'y']] -= ball_positions.values
-
-    # Efficient flipping for leftward plays
-    mask = df['playDirection'] == 'left'
-    df.loc[mask, ['x', 'y']] *= -1
+    conditions = [
+        (df['x'] < 3) & (df['y'] > 3),   # Right Edge
+        (df['x'] < 3) & (df['y'] <= 3) & (df['y'] > 0),  # Right Inside
+        (df['x'] < 3) & (df['y'] >= -3) & (df['y'] <= 0),  # Left Inside
+        (df['x'] < 3) & (df['y'] < -3),   # Left Edge
+        (df['x'] >=3 ) & (df['y'] < 0 ),  # Right Off Ball
+        (df['x'] >=3) & (df['y'] > 0)   # Left Off Ball
+    ]
+    
+    choices = [
+        'Right Edge', 
+        'Right Inside', 
+        'Left Inside', 
+        'Left Edge', 
+        'Right Off Ball', 
+        'Left Off Ball'
+    ]
+    
+    df['alignment_category'] = np.select(conditions, choices, default='Unclassified')
     
     return df
 
-# Normalize and Create Heatmap
-normalized_data = normalize_coordinates(front7_data, ball_position_dict)
+# Apply categorization
+normalized_data = categorize_player_alignment(week1)
 
-# binning the data
-alignment_data = normalized_data[['nflId', 'gameId', 'playId', 'x', 'y']]
-alignment_data['x_bin'] = pd.cut(alignment_data['x'], bins=50)
-alignment_data['y_bin'] = pd.cut(alignment_data['y'], bins=50)
+normalized_data = normalized_data[normalized_data['alignment_category'] != 'Unclassified']
+normalized_data = normalized_data[normalized_data['rushLocationType'] != 'UNKNOWN']
 
-heatmap_data = alignment_data.pivot_table(
-    index='y_bin', columns='x_bin', aggfunc='size', fill_value=0
-)
+# Evaluate redirection logic
+def evaluate_run_redirection(df):
 
+    # Check if defensive line players redirected the run
+    df['redirected_run'] = True
+    defensive_line = df['alignment_category'].isin(['Left Edge', 'Left Inside', 'Right Inside', 'Right Edge'])
 
-# plot feature adjustments
-plt.figure(figsize=(12, 6))
-plt.hist2d(front7_data['x'], front7_data['y'], bins=[50, 30], cmin=1, cmap='YlGnBu')
+    rush_pairs = {
+        'Left Edge' : "OUTSIDE_RIGHT",
+        'Right Edge' : "OUTSIDE_LEFT",
+        'Left Inside' : "INSIDE_RIGHT",
+        'Right Inside' : "INSIDE_LEFT",
+        'Right Off Ball': "LEFT",
+        'Left Off Ball': "RIGHT"
+    }
 
-plt.colorbar(label='Frequency')
-plt.xlabel('x (Yards from End Zone)')
-plt.ylabel('y (Yards from Sideline)')
-plt.title('Defensive Front 7 Alignments Heatmap')
+    # Direct comparison for defensive line players
+    df.loc[defensive_line, 'redirected_run'] = (
+    df['alignment_category'].map(rush_pairs) != df['rushLocationType'])
 
-# Adjust axes to reflect NFL field dimensions
-plt.xlim(-5, 20)  # Allowing some space for negative x-values
-plt.ylim(-15, 15)
+    # For off-ball players, only check left/right alignment
+    off_ball = df['alignment_category'].isin(['Left Off Ball', 'Right Off Ball'])
+    
+    df.loc[off_ball, 'redirected_run'] = (
+    ~df['alignment_category'].map(rush_pairs).isin(df['rushLocationType']))
 
-plt.xticks(np.arange(-4, 20, 2))  # 10-yard increments for length
-plt.yticks(np.arange(-15, 15, 5))  # 5-yard increments for width
+    return df
 
-plt.grid(True)
-plt.show()
+# Apply redirection evaluation
+normalized_data = evaluate_run_redirection(normalized_data)
+
+# Save the results
+normalized_data.to_csv('data/categorized_wk1.csv', index=False)
+
+# Display sample results
+print(normalized_data[['gameId', 'playId', 'nflId', 'x', 'y', 'alignment_category', 'redirected_run']].head(20))

@@ -38,7 +38,7 @@ def normalize_coordinates(df, ball_position_dict):
     # Vectorized adjustment of x and y coordinates
     df[['x', 'y']] -= ball_positions.values
 
-    # Efficient flipping for leftward plays
+    # Efficient flipping for rightward plays
     mask = df['playDirection'] == 'left'
     df.loc[mask, ['x', 'y']] *= -1
     
@@ -63,8 +63,8 @@ plt.figure(figsize=(12, 6))
 plt.hist2d(front7_data['x'], front7_data['y'], bins=[50, 30], cmin=1, cmap='YlGnBu')
 
 plt.colorbar(label='Frequency')
-plt.xlabel('x (Yards from End Zone)')
-plt.ylabel('y (Yards from Sideline)')
+plt.xlabel('X (Yards back from the Ball)')
+plt.ylabel('Y (Yards horizontal to the Ball (Right is positive))')
 plt.title('Defensive Front 7 Alignments Heatmap')
 
 # Adjust axes to reflect NFL field dimensions
