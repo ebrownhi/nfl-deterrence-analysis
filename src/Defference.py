@@ -47,8 +47,6 @@ def normalize_coordinates(df, ball_position_dict):
 # Normalize and Create Heatmap
 normalized_data = normalize_coordinates(front7_data, ball_position_dict)
 
-normalized_data.to_csv('data/normalized_wk1.csv', index=False)
-
 # binning the data
 alignment_data = normalized_data[['nflId', 'gameId', 'playId', 'x', 'y']]
 alignment_data['x_bin'] = pd.cut(alignment_data['x'], bins=50)
@@ -57,6 +55,7 @@ alignment_data['y_bin'] = pd.cut(alignment_data['y'], bins=50)
 heatmap_data = alignment_data.pivot_table(
     index='y_bin', columns='x_bin', aggfunc='size', fill_value=0
 )
+
 
 # plot feature adjustments
 plt.figure(figsize=(12, 6))
