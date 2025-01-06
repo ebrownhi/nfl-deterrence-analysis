@@ -25,7 +25,7 @@ print(off_ball_df.head(10))
 # Plotting
 # Bin the redirection percentage into 50 bins
 week1 = off_ball_df
-week1['binned_redirection'] = pd.cut(week1['redirection_percentage'], bins=75)
+week1['binned_redirection'] = pd.cut(week1['redirection_percentage'], bins=50)
 
 # Count the frequency of each bin
 redirection_counts = week1['binned_redirection'].value_counts().sort_index()
