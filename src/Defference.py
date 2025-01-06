@@ -70,8 +70,9 @@ def evaluate_run_redirection(df):
     off_ball = df['alignment_category'].isin(['Left Off Ball', 'Right Off Ball'])
     
     df.loc[off_ball, 'redirected_run'] = (
-    ~df['alignment_category'].map(rush_pairs).isin(df['rushLocationType']))
-
+    ~((df['alignment_category'] == 'Right Off Ball') & (df['rushLocationType'].str.contains('LEFT'))) &
+    ~((df['alignment_category'] == 'Left Off Ball') & (df['rushLocationType'].str.contains('RIGHT')))
+)
     return df
 
 # Apply redirection evaluation
