@@ -33,9 +33,9 @@ redirection_counts = week1['binned_redirection'].value_counts().sort_index()
 # Plotting
 plt.figure(figsize=(12, 6))
 plt.bar(redirection_counts.index.astype(str), redirection_counts.values, color='skyblue', edgecolor='black')
-plt.title('Off Ball Redirection Rate Distribution (min 50 plays)')
+plt.title('Off Ball Redirection Rate Distribution (min 30 plays)')
 plt.xlabel('Redirection Rate')
-plt.ylabel('Frequency')
+plt.ylabel('# of players')
 
 # Shorten the bin labels by formatting them
 bin_labels = [f"{int(bin.left)}-{int(bin.right)}" for bin in redirection_counts.index]
@@ -47,7 +47,7 @@ plt.show()
 # Plotting
 # Bin the redirection percentage into 50 bins
 week1 = on_ball_df
-week1['binned_redirection'] = pd.cut(week1['redirection_percentage'], bins=50)
+week1['binned_redirection'] = pd.cut(week1['redirection_percentage'], bins=35)
 
 # Count the frequency of each bin
 redirection_counts = week1['binned_redirection'].value_counts().sort_index()
@@ -55,9 +55,9 @@ redirection_counts = week1['binned_redirection'].value_counts().sort_index()
 # Plotting
 plt.figure(figsize=(12, 6))
 plt.bar(redirection_counts.index.astype(str), redirection_counts.values, color='skyblue', edgecolor='black')
-plt.title('On Ball Redirection Rate Distribution (min 50 plays)')
+plt.title('On Ball Redirection Rate Distribution (min 30 plays)')
 plt.xlabel('Redirection Rate')
-plt.ylabel('Frequency')
+plt.ylabel('# of players')
 
 # Shorten the bin labels by formatting them
 bin_labels = [f"{int(bin.left)}-{int(bin.right)}" for bin in redirection_counts.index]
