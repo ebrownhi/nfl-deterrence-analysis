@@ -12,7 +12,10 @@ dtypes = {
     'y': 'float32'
 }
 # load dataset
-week1 = pd.read_csv('Data/tracking_week_1.csv', dtype=dtypes)
+tracking_data = pd.DataFrame()
+for i in range(1, 10):
+    week = pd.read_csv(f'Data/tracking_week_{i}.csv', dtype=dtypes)
+    tracking_data = pd.concat([tracking_data, week], ignore_index=True)
 
 # dataset created from week 1 tracking values
 front7_data = pd.read_csv('Data/front7_data.csv')
@@ -24,7 +27,7 @@ def create_ball_position_dict(tracking_data):
     return dict(zip(zip(ball_at_snap['gameId'], ball_at_snap['playId']), 
                     zip(ball_at_snap['x'], ball_at_snap['y'])))
 
-ball_position_dict = create_ball_position_dict(week1)
+ball_position_dict = create_ball_position_dict(tracking_data)
 
 # function that subtracts the play's ball coordinates from the player
 def normalize_coordinates(df, ball_position_dict):
@@ -47,7 +50,7 @@ def normalize_coordinates(df, ball_position_dict):
 # Normalize and Create Heatmap
 normalized_data = normalize_coordinates(front7_data, ball_position_dict)
 
-normalized_data.to_csv('data/normalized_wk1.csv', index=False)
+normalized_data.to_csv('data/normalized_weeks.csv', index=False)
 
 # binning the data
 alignment_data = normalized_data[['nflId', 'gameId', 'playId', 'x', 'y']]
@@ -60,7 +63,7 @@ heatmap_data = alignment_data.pivot_table(
 
 # plot feature adjustments
 plt.figure(figsize=(12, 6))
-plt.hist2d(front7_data['x'], front7_data['y'], bins=[50, 30], cmin=1, cmap='YlGnBu')
+plt.hist2d(front7_data['x'], front7_data['y'], bins=[100, 60], cmin=1, cmap='YlGnBu')
 
 plt.colorbar(label='Frequency')
 plt.xlabel('X (Yards back from the Ball)')

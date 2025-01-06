@@ -12,7 +12,7 @@ dtypes = {
     'y': 'float32'
 }
 # load dataset
-week1 = pd.read_csv('Data/normalized_wk1.csv', dtype=dtypes)
+week1 = pd.read_csv('Data/normalized_weeks.csv', dtype=dtypes)
 
 # Categorize player alignments
 def categorize_player_alignment(df):
@@ -78,7 +78,7 @@ def evaluate_run_redirection(df):
 normalized_data = evaluate_run_redirection(normalized_data)
 
 # Save the results
-normalized_data.to_csv('data/categorized_wk1.csv', index=False)
+normalized_data.to_csv('data/categorized_weeks.csv', index=False)
 
 # Display sample results
 print(normalized_data[['gameId', 'playId', 'nflId', 'x', 'y', 'alignment_category', 'redirected_run']].head(20))
