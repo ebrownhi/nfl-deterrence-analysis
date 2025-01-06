@@ -110,3 +110,9 @@ webcolors==24.11.1
 webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.13
+
+matplotlib==3.10.0
+matplotlib-inline==0.1.7
+pandas==2.2.3
+seaborn==0.13.2
+
